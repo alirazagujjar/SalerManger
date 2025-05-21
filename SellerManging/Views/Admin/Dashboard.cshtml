@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Seller>
+﻿@model IEnumerable<User>
 
 <div class="container mt-4">
     <h2>Admin Dashboard</h2>
@@ -30,7 +30,7 @@
                                     var todayCommission = seller.Sales.Sum(s => s.Commission);
 
                                     <tr>
-                                        <td>@seller.Name</td>
+                                        <td>@seller.Username</td>
                                         <td>$@todaySales.ToString("N2")</td>
                                         <td>
                                             <form asp-action="UpdateCommission" method="post" class="d-flex">
@@ -64,7 +64,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Assign Inventory to @seller.Name</h5>
+                    <h5 class="modal-title">Assign Inventory to @seller.Username</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form asp-action="AssignInventory" method="post">

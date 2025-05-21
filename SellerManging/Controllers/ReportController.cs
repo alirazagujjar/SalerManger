@@ -44,7 +44,7 @@ namespace SellerManging.Controllers
         {
             var report = await _context.Sales
                 .Include(s => s.Product)
-                .Include(s => s.Seller)
+                .Include(s => s.User)
                 .OrderByDescending(s => s.SaleDate)
                 .ToListAsync();
 
@@ -60,7 +60,7 @@ namespace SellerManging.Controllers
                 int yPos = 100;
                 foreach (var sale in report)
                 {
-                    var line = $"{sale.SaleDate:d} - {sale.Seller.Username} - {sale.Product.Name} - Qty: {sale.Quantity} - ${sale.Price:N2}";
+                    var line = $"{sale.SaleDate:d} - {sale.User.Username} - {sale.Product.Name} - Qty: {sale.Quantity} - ${sale.Price:N2}";
                     gfx.DrawString(line, font, XBrushes.Black, new XRect(50, yPos, page.Width - 100, 20), XStringFormats.TopLeft);
                     yPos += 25;
 
@@ -75,7 +75,7 @@ namespace SellerManging.Controllers
                 var ms = new MemoryStream();
                 doc.Save(ms);
                 ms.Position = 0;
-                return File(ms, "application/pdf", $"SalesReport_{DateTime.Now:yyyyMMdd}.pdf");
+                return File(ms, "application/pdf", $"SalesReport_{DateTime.UtcNow:yyyyMMdd}.pdf");
             }
         }
     }

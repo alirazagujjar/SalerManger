@@ -24,10 +24,10 @@ namespace SellerManging.Controllers
             {
                 DailySales = await _context.Sales
                     .Where(s => s.SaleDate.Date == today)
-                    .Include(s => s.Seller)
-                    .GroupBy(s => new { s.SellerId, s.Seller.Username })
+                    .Include(s => s.UserId)
+                    .GroupBy(s => new { s.UserId, s.User.Username })
                     .Select(g => new {
-                        UserId = g.Key.SellerId,
+                        UserId = g.Key.UserId,
                         Seller = g.Key.Username,
                         Total = g.Sum(s => s.Price * s.Quantity)
                     })
@@ -44,10 +44,10 @@ namespace SellerManging.Controllers
 
                 TopSellers = await _context.Sales
                     .Where(s => s.SaleDate >= lastMonth)
-                    .Include(s => s.Seller)
-                    .GroupBy(s => new { s.SellerId, s.Seller.Username })
+                    .Include(s => s.User)
+                    .GroupBy(s => new { s.UserId, s.User.Username })
                     .Select(g => new {
-                        UserId = g.Key.SellerId,
+                        UserId = g.Key.UserId,
                         Seller = g.Key.Username,
                         TotalSales = g.Sum(s => s.Price * s.Quantity),
                         TotalCommission = g.Sum(s => s.Commission)

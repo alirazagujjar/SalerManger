@@ -9,6 +9,6 @@
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
         public string Type { get; set; } // "LowStock", "SaleAlert", "System"
-        public virtual Seller Seller { get; set; }
+        public virtual User Seller { get; set; }
     }
 }

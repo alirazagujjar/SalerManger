@@ -7,7 +7,7 @@ namespace SellerManging.Data
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-        public DbSet<Seller> Sellers { get; set; }
+       // public DbSet<Seller> Sellers { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Sale> Sales { get; set; }
         public DbSet<InventoryAssignment> InventoryAssignments { get; set; }
@@ -20,11 +20,11 @@ namespace SellerManging.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Sale>()
-                .HasOne(s => s.Seller)
+                .HasOne(s => s.User)
                 .WithMany(u => u.Sales)
-                .HasForeignKey(s => s.SellerId)
+                .HasForeignKey(s => s.UserId)
                 .IsRequired()
-                .OnDelete(DeleteBehavior.Restrict); // Optional: avoids cascade delete
+				.OnDelete(DeleteBehavior.Restrict); // Optional: avoids cascade delete
         }
 
     }

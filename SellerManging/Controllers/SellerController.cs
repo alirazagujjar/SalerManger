@@ -25,7 +25,7 @@ namespace SellerManging.Controllers
                 return RedirectToAction("Login", "Auth");
             }
             var sales = await _context.Sales
-                .Where(s => s.SellerId == seller.Id)
+                .Where(s => s.UserId == seller.Id)
                 .Include(s => s.Product)
                 .OrderByDescending(s => s.SaleDate)
                 .ToListAsync();
@@ -50,7 +50,7 @@ namespace SellerManging.Controllers
                 .ToListAsync();
 
             var soldQuantitiesPerAssignment = await _context.Sales
-                .Where(s => s.SellerId == seller.Id)
+                .Where(s => s.UserId == seller.Id)
                 .GroupBy(s => s.InventoryAssignmentId)
                 .Select(g => new { g.Key, Total = g.Sum(x => x.Quantity) })
                 .ToDictionaryAsync(g => g.Key, g => g.Total);
@@ -82,12 +82,12 @@ namespace SellerManging.Controllers
                     {
                         var sale = new Sale
                         {
-                            SellerId = seller.Id,
+                            UserId = seller.Id,
                             ProductId = productId,
                             Quantity = quantity,
                             Price = product.Price,
                             Commission = product.Price * quantity * seller.CommissionRate,
-                            SaleDate = DateTime.Now,
+                            SaleDate = DateTime.UtcNow,
                             InventoryAssignmentId = inventoryAssignmentId
                         };
 
@@ -123,7 +123,7 @@ namespace SellerManging.Controllers
                 return NotFound();
             var sales = await _context.Sales
                 .Include(s => s.Product)
-                .Where(s => s.SellerId == seller.Id)
+                .Where(s => s.UserId == seller.Id)
                 .OrderByDescending(s => s.SaleDate)
                 .ToListAsync();
             return View(sales);

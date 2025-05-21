@@ -48,8 +48,8 @@ namespace SellerManging.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
-            var today = DateTime.Today;
-            var sellers = await _context.Sellers
+            var today = DateTime.UtcNow.Date;
+            var sellers = await _context.Users
                 .Include(s => s.Sales.Where(sale => sale.SaleDate.Date == today))
                 .ToListAsync();
 
@@ -82,7 +82,7 @@ namespace SellerManging.Controllers
                     SellerId = sellerId,
                     ProductId = productId,
                     AssignedQuantity = quantity,
-                    AssignmentDate = DateTime.Now
+                    AssignmentDate = DateTime.UtcNow
                 };
                 _context.InventoryAssignments.Add(assignment);
                 await _context.SaveChangesAsync();
@@ -190,10 +190,10 @@ namespace SellerManging.Controllers
                 {
                     Seller = s,
                     TotalSales = _context.Sales
-                        .Where(sale => sale.SellerId == s.Id)
+                        .Where(sale => sale.UserId == s.Id)
                         .Sum(sale => sale.Price * sale.Quantity),
                     TotalCommission = _context.Sales
-                        .Where(sale => sale.SellerId == s.Id)
+                        .Where(sale => sale.UserId == s.Id)
                         .Sum(sale => sale.Commission)
                 })
                 .OrderBy(s => s.Seller.Username)
