@@ -1,1 +1,74 @@
 
+## Ignore Visual Studio temporary files, build results, and
+## user-specific files
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# Visual Studio working folder
+.vs/
+
+# Rider project files
+.idea/
+
+# DotCover
+*.dotCover
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# SQL Server database files
+*.mdf
+*.ldf
+
+# NCrunch
+*.ncrunch*
+.*crunch*.local.xml
+
+# IIS Express
+.vs/
+*.vspscc
+*.vssscc
+*.scc
+.vscode/
+
+# Other files
+_ReSharper*/
+*.resharper
+*.dbmdl
+*.bak
+*.orig
+*.rej
+
+# NuGet packages
+*.nupkg
+# The packages folder can be ignored because of the 'restore' feature
+**/packages/*
+!**/packages/build/
+!**/packages/repositories.config
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Tye
+.tye/
+
+# Logs
+*.log
