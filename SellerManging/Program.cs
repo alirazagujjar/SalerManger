@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using SellerManging.Data;
 using SellerManging.Hubs;
+using SellerManging.Middleware;
 using SellerManging.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,7 +38,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseRouting();
 
 app.UseAuthentication();
