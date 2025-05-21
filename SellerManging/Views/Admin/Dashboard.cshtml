@@ -36,14 +36,14 @@
                                             <form asp-action="UpdateCommission" method="post" class="d-flex">
                                                 <input type="hidden" name="sellerId" value="@seller.Id" />
                                                 <input type="number" name="commissionRate" value="@seller.CommissionRate"
-                                                       class="form-control form-control-sm" style="width: 80px" step="0.01" min="0" max="1" />
+                                                class="form-control form-control-sm" style="width: 80px" step="0.01" min="0" max="1" />
                                                 <button type="submit" class="btn btn-sm btn-primary ms-2">Update</button>
                                             </form>
                                         </td>
                                         <td>$@todayCommission.ToString("N2")</td>
                                         <td>
                                             <button type="button" class="btn btn-sm btn-info"
-                                                    data-bs-toggle="modal" data-bs-target="#assignInventory-@seller.Id">
+                                            data-bs-toggle="modal" data-bs-target="#assignInventory-@seller.Id">
                                                 Assign Inventory
                                             </button>
                                         </td>
@@ -72,11 +72,16 @@
                         <input type="hidden" name="sellerId" value="@seller.Id" />
                         <div class="mb-3">
                             <label class="form-label">Product</label>
+
                             <select name="productId" class="form-select" required>
-                                @foreach (var product in ViewBag.Products)
+                                @if (ViewBag.Products != null)
                                 {
-                                    <option value="@product.Id">@product.Name (Stock: @product.Quantity)</option>
+                                    foreach (var product in ViewBag.Products)
+                                    {
+                                        <option value="@product.Id">@product.Name (Stock: @product.Quantity)</option>
+                                    }
                                 }
+                                
                             </select>
                         </div>
                         <div class="mb-3">
