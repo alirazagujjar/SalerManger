@@ -23,6 +23,7 @@ namespace SellerManging.Data
                 .HasOne(s => s.Seller)
                 .WithMany(u => u.Sales)
                 .HasForeignKey(s => s.SellerId)
+                .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict); // Optional: avoids cascade delete
         }
 
