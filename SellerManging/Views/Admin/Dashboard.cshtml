@@ -1,0 +1,95 @@
+﻿@model IEnumerable<Seller>
+
+<div class="container mt-4">
+    <h2>Admin Dashboard</h2>
+
+
+    <!-- Existing Sales Overview Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Today's Sales Overview</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Seller Name</th>
+                                    <th>Today's Sales</th>
+                                    <th>Commission Rate</th>
+                                    <th>Today's Commission</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var seller in Model)
+                                {
+                                    var todaySales = seller.Sales.Sum(s => s.Price * s.Quantity);
+                                    var todayCommission = seller.Sales.Sum(s => s.Commission);
+
+                                    <tr>
+                                        <td>@seller.Name</td>
+                                        <td>$@todaySales.ToString("N2")</td>
+                                        <td>
+                                            <form asp-action="UpdateCommission" method="post" class="d-flex">
+                                                <input type="hidden" name="sellerId" value="@seller.Id" />
+                                                <input type="number" name="commissionRate" value="@seller.CommissionRate"
+                                                       class="form-control form-control-sm" style="width: 80px" step="0.01" min="0" max="1" />
+                                                <button type="submit" class="btn btn-sm btn-primary ms-2">Update</button>
+                                            </form>
+                                        </td>
+                                        <td>$@todayCommission.ToString("N2")</td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-info"
+                                                    data-bs-toggle="modal" data-bs-target="#assignInventory-@seller.Id">
+                                                Assign Inventory
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@foreach (var seller in Model)
+{
+    <div class="modal fade" id="assignInventory-@seller.Id" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Inventory to @seller.Name</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="AssignInventory" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" name="sellerId" value="@seller.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Product</label>
+                            <select name="productId" class="form-select" required>
+                                @foreach (var product in ViewBag.Products)
+                                {
+                                    <option value="@product.Id">@product.Name (Stock: @product.Quantity)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" name="quantity" class="form-control" required min="1" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

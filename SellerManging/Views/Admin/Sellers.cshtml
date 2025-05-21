@@ -1,0 +1,136 @@
+﻿@model IEnumerable<SellerManging.Models.User>
+
+<div class="container mt-4">
+    <h2>Manage Sellers</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Create New Seller</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="CreateSeller" method="post">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" name="Username" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" name="PasswordHash" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="btn btn-primary form-control">Create Seller</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Existing Sellers</h5>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var seller in Model)
+                    {
+                        <tr>
+                            <td>@seller.Username</td>
+                            <td>@seller.CreatedAt.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                <span class="badge @(seller.IsActive ? "bg-success" : "bg-danger")">
+                                    @(seller.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td>
+                                <form asp-action="ToggleSellerStatus" method="post" style="display: inline;">
+                                    <input type="hidden" name="id" value="@seller.Id" />
+                                    <button type="submit" class="btn btn-sm @(seller.IsActive ? "btn-danger" : "btn-success")">
+                                        @(seller.IsActive ? "Deactivate" : "Activate")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Inventory Assignment Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Assign Inventory to Seller</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="AssignInventory" method="post" class="mt-3">
+                    <div class="form-group mb-3">
+                        <label>Select Seller</label>
+                        <div class="dropdown-select position-relative">
+                            <select name="sellerId" class="form-select" required>
+                                <option value="">Choose Seller</option>
+                                @foreach (var seller in Model.Where(a=>a.IsActive==true).ToList())
+                                {
+                                    <option value="@seller.Id">@seller.Username</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label>Select Product</label>
+                        <select name="productId" id="productSelect" class="form-select" required onchange="updateAvailableQuantity()">
+                            <option value="">Choose Product</option>
+                            @foreach (var product in ViewBag.Products)
+                            {
+                                <option value="@product.Product.Id" data-quantity="@(product.Product.Quantity)" data-assigned="@product.AssignedQuantity">@product.Product.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label>Available Quantity: <span id="availableQuantity">0</span></label>
+                        <input type="number" name="quantity" class="form-control" required min="1" id="quantityInput" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Assign Inventory</button>
+                </form>
+
+                
+            </div>
+        </div>
+    </div>
+@section Scripts {
+
+        <script>
+            
+            function updateAvailableQuantity() {
+                    const productSelect = document.getElementById('productSelect');
+                    const selectedOption = productSelect.options[productSelect.selectedIndex];
+                    const availableQuantity = parseInt(selectedOption.getAttribute('data-quantity')) || 0;
+                    const assignedQuantity = parseInt(selectedOption.getAttribute('data-assigned')) || 0;
+                    const remainingQuantity = availableQuantity - assignedQuantity;
+                    debugger;
+                    document.getElementById('availableQuantity').textContent = remainingQuantity;
+
+                    const quantityInput = document.getElementById('quantityInput');
+                    quantityInput.max = remainingQuantity;
+                    quantityInput.value = Math.min(quantityInput.value, remainingQuantity);
+                }
+        </script>
+}

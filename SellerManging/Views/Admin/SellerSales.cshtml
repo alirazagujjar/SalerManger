@@ -1,0 +1,50 @@
+﻿@model IEnumerable<SellerSalesViewModel>
+
+<div class="container mt-4">
+    <h2>Seller-wise Sales</h2>
+
+    @foreach (var seller in Model)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>@seller.Seller.Username's Sales</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                                <th>Commission</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var sale in seller.Seller.Sales)
+                            {
+                                <tr>
+                                    <td>@sale.SaleDate.ToString("MM/dd/yyyy")</td>
+                                    <td>@sale.Product.Name</td>
+                                    <td>@sale.Quantity</td>
+                                    <td>$@sale.Price.ToString("N2")</td>
+                                    <td>$@((sale.Price * sale.Quantity).ToString("N2"))</td>
+                                    <td>$@sale.Commission.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <td colspan="4"><strong>Total</strong></td>
+                                <td><strong>$@seller.TotalSales.ToString("N2")</strong></td>
+                                <td><strong>$@seller.TotalCommission.ToString("N2")</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

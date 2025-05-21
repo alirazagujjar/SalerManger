@@ -1,0 +1,353 @@
+﻿@{
+    ViewData["Title"] = "Chat";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card chat-sidebar">
+                <div class="card-header">
+                    <h5>Chat Options</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Chat Type</label>
+                        <select class="form-select" id="chatType" onchange="switchChatType()">
+                            <option value="private">Admin Chat</option>
+                            <option value="group">Group Chat</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card chat-main">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-chat-dots"></i> <span id="selectedChatType">Admin Chat</span></h5>
+                    <span class="badge bg-success" id="chatTypeIndicator">Private Chat</span>
+                </div>
+                <div class="card-body chat-box" style="height: 400px; overflow-y: auto;">
+                    <div id="messagesList" class="chat-messages"></div>
+                </div>
+                <div class="card-footer">
+                    <div class="input-group">
+                        <input type="text" id="messageInput" class="form-control" placeholder="Type your message...">
+                        <button class="btn btn-primary" onclick="sendMessage()">
+                            <i class="bi bi-send"></i> Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chat-sidebar {
+        border: none;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .chat-main {
+        border: none;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .chat-box {
+        background: #f8f9fa;
+        padding: 1rem;
+    }
+
+    .chat-messages {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .chat-messages .list-group-item {
+            margin: 5px 0;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+
+            .chat-messages .list-group-item.sent {
+                align-self: flex-end;
+                background: #007bff;
+                color: white;
+            }
+
+            .chat-messages .list-group-item.received {
+                align-self: flex-start;
+                background: white;
+            }
+
+    .badge {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        let connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").withAutomaticReconnect().build();
+        let chatType = "private";
+        let chatHistory = {
+            private: {},
+            group: []
+        };
+        connection.onreconnecting((error) => {
+            console.warn("Reconnecting to chat hub...", error);
+        // Optional: show a "Reconnecting..." indicator in your UI
+        });
+
+        connection.onreconnected((connectionId) => {
+            console.log("Reconnected to chat hub. Connection ID:", connectionId);
+            // Optional: reload chat data
+            loadCurrentChatHistory();
+        });
+
+        connection.onclose((error) => {
+            console.error("Chat connection closed. Trying to reconnect manually...", error);
+           
+        });
+        connection.on("ClearMessages", function() {
+            chatHistory = { private: {}, group: [] };
+            document.getElementById("messagesList").innerHTML = "";
+        });
+
+        connection.on("ReceivePrivateMessage", function (user, message, senderId, isSent, messageId) {
+            const adminId = isSent ? senderId : selectedAdminId;
+            if (!chatHistory.private[adminId]) {
+                chatHistory.private[adminId] = [];
+            }
+            chatHistory.private[adminId].push({
+                user: user,
+                message: message,
+                isSent: isSent,
+                messageId: messageId
+            });
+
+            if (chatType === "private" && selectedAdminId === adminId) {
+                displayMessages();
+            }
+        });
+
+        connection.on("ReceiveGroupMessage", function (user, message) {
+            if (chatType === "group") {
+                let li = document.createElement("li");
+                li.className = "list-group-item " + (user === "@User.Identity.Name" ? "sent" : "received");
+                li.textContent = `${user}: ${message}`;
+                document.getElementById("messagesList").appendChild(li);
+                scrollToBottom();
+            }
+        });
+
+        connection.start()
+            .then(function() {
+                console.log("Connected to chat hub");
+                loadCurrentChatHistory();
+            })
+            .catch(function (err) {
+                return console.error(err.toString());
+            });
+
+        function displayMessages() {
+            const messagesList = document.getElementById("messagesList");
+            messagesList.innerHTML = "";
+
+            if (chatType === "private" && selectedAdminId) {
+                const messages = chatHistory.private[selectedAdminId] || [];
+                messages.forEach(msg => {
+                    let li = document.createElement("li");
+                    li.className = "list-group-item " + (msg.isSent ? "sent" : "received");
+                    li.textContent = `${msg.user}: ${msg.message}`;
+                    messagesList.appendChild(li);
+                });
+            } else if (chatType === "group") {
+                chatHistory.group.forEach(msg => {
+                    let li = document.createElement("li");
+                    li.className = "list-group-item " + (msg.user === "@User.Identity.Name" ? "sent" : "received");
+                    li.textContent = `${msg.user}: ${msg.message}`;
+                    messagesList.appendChild(li);
+                });
+            }
+            scrollToBottom();
+        }
+
+        function loadCurrentChatHistory() {
+            if (selectedAdminId || chatType === "group") {
+                fetch(`/Seller/GetChatMessages?adminId=${selectedAdminId || ""}&chatType=${chatType}`)
+                    .then(response => response.json())
+                    .then(messages => {
+                        chatHistory = { group: [], private: {} };
+                        if (chatType === "private") {
+                            chatHistory.private[selectedAdminId] = messages;
+                        } else {
+                            chatHistory.group = messages;
+                        }
+                        displayMessages();
+                    })
+                    .catch(err => console.error("Error loading chat history:", err));
+            }
+        }
+
+        function switchChatType() {
+            debugger
+            chatType = document.getElementById("chatType").value;
+            const adminSelectContainer = document.getElementById("adminSelectContainer");
+            const adminSelect = document.getElementById("adminSelect");
+
+            if (chatType === "group")
+            {
+                selectedAdminId = null;
+                document.getElementById("selectedChatType").textContent = "Group Chat";
+                document.getElementById("chatTypeIndicator").textContent = "Group Chat";
+             }
+             else {
+                 debugger
+                    // When switching to private chat and an admin is already selected
+                    const adminSelect = document.getElementById("adminSelect");
+                    if (adminSelect && adminSelect.value) {
+                        selectedAdminId = adminSelect.value;
+                        const selectedName = adminSelect.options[adminSelect.selectedIndex].text;
+                        document.getElementById("selectedChatType").textContent = selectedName;
+                        document.getElementById("chatTypeIndicator").textContent = "Private Chat with " + selectedName;
+                    } 
+                    else {
+                        document.getElementById("selectedChatType").textContent = "Admin Chat";
+                        document.getElementById("chatTypeIndicator").textContent = "Private Chat";
+                    }
+                }
+
+            if (adminSelectContainer) {
+                adminSelectContainer.style.display = chatType === "private" ? "block" : "none";
+            }
+
+            document.getElementById("messagesList").innerHTML = "";
+            // Only load if group or if admin is selected
+            if (chatType === "group" || selectedAdminId) {
+                loadCurrentChatHistory();
+            }
+            //loadCurrentChatHistory();
+        }
+
+        let selectedAdminId = null;
+
+        // Load admin list when page loads
+        fetch('/Admin/GetAdmins')
+            .then(response => response.json())
+            .then(admins => {
+                const adminSelect = document.createElement('select');
+                adminSelect.className = 'form-select mb-3';
+                adminSelect.id = 'adminSelect';
+                adminSelect.innerHTML = '<option value="">Select Admin...</option>' +
+                    admins.map(admin => `<option value="${admin.id}">${admin.username}</option>`).join('');
+
+                adminSelect.onchange = (e) => {
+                    selectedAdminId = e.target.value;
+                    const selectedName = e.target.options[e.target.selectedIndex].text;
+                    document.getElementById("selectedChatType").textContent = selectedName;
+                    document.getElementById("chatTypeIndicator").textContent = "Private Chat with " + selectedName;
+                };
+
+                const adminSelectContainer = document.createElement('div');
+                adminSelectContainer.id = 'adminSelectContainer';
+                adminSelectContainer.style.display = chatType === 'private' ? 'block' : 'none';
+                adminSelectContainer.appendChild(adminSelect);
+                document.querySelector('.card-header').after(adminSelectContainer);
+
+                // Initial state
+                if (adminSelect.value) {
+                    selectedAdminId = adminSelect.value;
+                    document.getElementById("selectedChatType").textContent = adminSelect.options[adminSelect.selectedIndex].text;
+                }
+            })
+            .catch(err => console.error('Error fetching admins:', err));
+
+        // function sendMessage() {
+        //     let message = document.getElementById("messageInput").value;
+        //     if (!message.trim()) return;
+
+        //     if (chatType === "private") {
+        //         if (!selectedAdminId) {
+        //             alert("Please select an admin first");
+        //             return;
+        //         }
+        //         connection.invoke("SendMessage", selectedAdminId.toString(), message);
+        //     } else {
+        //         connection.invoke("SendGroupMessage", message);
+        //     }
+        //     document.getElementById("messageInput").value = "";
+        // }
+        async function sendMessage() {
+            debugger;
+            let message = document.getElementById("messageInput").value;
+            if (!message.trim()) return;
+
+            // Check if the connection is established
+            if (connection.state !== signalR.HubConnectionState.Connected) {
+                console.warn("Not connected to the chat hub. Attempting to reconnect...");
+
+                try {
+                    await connection.start();
+                    console.log("Reconnected successfully");
+                } catch (err) {
+                    console.error("Reconnect failed", err);
+                    alert("Unable to reconnect. Please try again later.");
+                    return;
+                }
+            }
+
+            // Proceed with sending the message
+            if (chatType === "private") {
+                if (!selectedAdminId) {
+                    alert("Please select an admin first");
+                    return;
+                }
+                connection.invoke("SendMessage", selectedAdminId.toString(), message)
+                    .catch(err => console.error("Failed to send message", err));
+            } 
+            else {
+                connection.invoke("SendGroupMessage", message)
+                    .catch(err => console.error("Failed to send group message", err));
+            }
+
+            // Clear the message input after sending
+            document.getElementById("messageInput").value = "";
+        }
+
+        function scrollToBottom() {
+            const chatBox = document.querySelector('.chat-box');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        function tryReconnect() {
+            debugger;
+            setTimeout(() => {
+                connection.start()
+                    .then(() => {
+                        console.log("Reconnected manually.");
+                        loadCurrentChatHistory();
+                    })
+                    .catch(err => {
+                        console.error("Manual reconnect failed. Retrying in 5s...", err);
+                        tryReconnect();
+                    });
+            }, 5000);
+        }
+
+        // Enable Enter key to send message
+        // document.getElementById("messageInput").addEventListener("keypress", function(event) {
+        //     if (event.key === "Enter") {
+        //         event.preventDefault();
+        //         sendMessage();
+        //     }
+        // });
+                // Add the event listener for keypress
+        document.getElementById("messageInput").addEventListener("keypress", async function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                // Await the sendMessage call to ensure asynchronous handling
+                await sendMessage();
+            }
+        });
+    </script>
+}

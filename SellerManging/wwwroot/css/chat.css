@@ -1,0 +1,23 @@
+﻿
+.chat-container {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.chat-message {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+    .chat-message.sent {
+        background-color: #007bff;
+        color: white;
+        margin-left: 20%;
+    }
+
+    .chat-message.received {
+        background-color: #e9ecef;
+        margin-right: 20%;
+    }

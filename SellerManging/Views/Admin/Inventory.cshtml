@@ -1,0 +1,76 @@
+﻿@model IEnumerable<dynamic>
+
+<div class="container mt-4">
+    <h2>Inventory Tracking</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Total Quantity</th>
+                            <th>Total Assigned</th>
+                            <th>Available Quantity</th>
+                            <th>Seller Allocations</th>
+                            <th>Minimum Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr class="@(item.Product.LowStock ? "table-warning" : "")">
+                                <td>@item.Product.Name</td>
+                                <td>@item.Product.Quantity</td>
+                                <td>@item.AssignedQuantity</td>
+                                <td>@(item.Product.Quantity - item.AssignedQuantity)</td>
+                                
+                                <td>@item.Product.MinimumStock</td>
+                                <td>@(item.Product.LowStock ? "Low Stock" : "In Stock")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#allocations-@item.Product.Id">
+                                        View Allocations
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="7" class="p-0">
+                                    <div class="collapse" id="allocations-@item.Product.Id">
+                                        <div class="card card-body m-2">
+                                            <h6>Seller Allocations</h6>
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Seller</th>
+                                                        <th>Allocated</th>
+                                                        <th>Sold</th>
+                                                        <th>Remaining</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var allocation in item.SellerAllocations)
+                                                    {
+                                                        <tr>
+                                                            <td>@allocation.SellerName</td>
+                                                            <td>@allocation.Allocated</td>
+                                                            <td>@allocation.Sold</td>
+                                                            <td>@(allocation.Allocated - allocation.Sold)</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

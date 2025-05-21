@@ -1,0 +1,36 @@
+﻿@model IEnumerable<Sale>
+
+<div class="container mt-4">
+    <h2>My Sales History</h2>
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                            <th>Commission</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sale in Model)
+                        {
+                            <tr>
+                                <td>@sale.SaleDate.ToString("MM/dd/yyyy")</td>
+                                <td>@sale.Product.Name</td>
+                                <td>@sale.Quantity</td>
+                                <td>$@sale.Price.ToString("N2")</td>
+                                <td>$@((sale.Price * sale.Quantity).ToString("N2"))</td>
+                                <td>$@sale.Commission.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

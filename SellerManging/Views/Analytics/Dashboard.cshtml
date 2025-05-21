@@ -1,0 +1,65 @@
+﻿@{
+    ViewData["Title"] = "Analytics Dashboard";
+}
+
+<div class="container mt-4">
+    <h2>Analytics Dashboard</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Daily Sales Overview</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Seller</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var sale in Model.DailySales)
+                                {
+                                    <tr>
+                                        <td>@sale.Seller</td>
+                                        <td>$@sale.Total.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Top Sellers (Last 30 Days)</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Seller</th>
+                                    <th>Total Sales</th>
+                                    <th>Commission Earned</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var seller in Model.TopSellers)
+                                {
+                                    <tr>
+                                        <td>@seller.Seller</td>
+                                        <td>$@seller.TotalSales.ToString("N2")</td>
+                                        <td>$@seller.TotalCommission.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,29 @@
+﻿@model IEnumerable<SellerManging.Models.Notification>
+
+<div class="container mt-4">
+    <h2>Notifications</h2>
+
+    <div class="list-group">
+        @foreach (var notification in Model)
+        {
+            <div class="list-group-item @(!notification.IsRead ? "list-group-item-info" : "")">
+                <div class="d-flex justify-content-between">
+                    <h5 class="mb-1">@notification.Title</h5>
+                    <small>@notification.CreatedAt.ToString("MM/dd/yyyy HH:mm")</small>
+                </div>
+                <p class="mb-1">@notification.Message</p>
+                @if (!notification.IsRead)
+                {
+                    <form asp-action="MarkAsRead" method="post" class="mt-2">
+                        <input type="hidden" name="notificationId" value="@notification.Id" />
+                        <button type="submit" class="btn btn-sm btn-primary">Mark as Read</button>
+                    </form>
+                }
+            </div>
+        }
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info">No notifications found.</div>
+        }
+    </div>
+</div>

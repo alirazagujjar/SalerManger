@@ -1,0 +1,99 @@
+﻿@model IEnumerable<Sale>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    @if (ViewBag.Seller?.ProfileImage != null)
+                    {
+                        <img src="data:image/jpeg;base64,@Convert.ToBase64String(ViewBag.Seller.ProfileImage)"
+                             class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <img src="/images/default-profile.png" class="rounded-circle mb-3"
+                             style="width: 150px; height: 150px; object-fit: cover;" />
+                    }
+                    <h5>Upload Profile Picture</h5>
+                    <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                        <input type="file" name="profileImage" class="form-control mb-2" accept="image/*" />
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4>Sales Summary</h4>
+                    <div class="row">
+                        <div class="col-6">
+                            <h5>Total Sales</h5>
+                            <p class="h3">$@ViewBag.TotalSales.ToString("N2")</p>
+                        </div>
+                        <div class="col-6">
+                            <h5>Total Commission</h5>
+                            <p class="h3">$@ViewBag.TotalCommission.ToString("N2")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h4>Sales History</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Commission</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var sale in Model)
+                                {
+                                    <tr>
+                                        <td>@sale.SaleDate.ToString("MM/dd/yyyy")</td>
+                                        <td>@sale.Product.Name</td>
+                                        <td>@sale.Quantity</td>
+                                        <td>$@sale.Price.ToString("N2")</td>
+                                        <td>$@sale.Commission.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievement-widget card mt-4">
+                <div class="card-body">
+                    <h4>Your Achievements</h4>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: @(ViewBag.TargetProgress)%"
+                             aria-valuenow="@ViewBag.TargetProgress"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                            @ViewBag.TargetProgress%
+                        </div>
+                    </div>
+                    <p>Monthly Target: $@ViewBag.CurrentTarget</p>
+                    <p>Achievement: $@ViewBag.CurrentAchievement</p>
+
+                    @if (ViewBag.IsTargetAchieved)
+                    {
+                        <div class="alert alert-success">
+                            Congratulations! You've hit your target! 🎉
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

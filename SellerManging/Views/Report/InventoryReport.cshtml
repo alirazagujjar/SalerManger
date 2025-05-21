@@ -1,0 +1,41 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Inventory Report";
+}
+
+<div class="container mt-4">
+    <h2>Inventory Report</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Total Quantity</th>
+                            <th>Assigned Quantity</th>
+                            <th>Sold Quantity</th>
+                            <th>Available Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var availableStock = item.Product.Quantity - item.AssignedQuantity;
+                            <tr class="@(availableStock <= item.Product.MinimumStock ? "table-warning" : "")">
+                                <td>@item.Product.Name</td>
+                                <td>@item.Product.Quantity</td>
+                                <td>@item.AssignedQuantity</td>
+                                <td>@item.SoldQuantity</td>
+                                <td>@availableStock</td>
+                                <td>@(availableStock <= item.Product.MinimumStock ? "Low Stock" : "In Stock")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

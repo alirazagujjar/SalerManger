@@ -1,0 +1,267 @@
+﻿@model List<User>
+@{
+    ViewData["Title"] = "Chat";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card chat-sidebar">
+                <div class="card-header">
+                    <h5>Chat Options</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Chat Type</label>
+                        <select class="form-select" id="chatType" onchange="switchChatType()">
+                            <option value="group">Group Chat</option>
+                            <option value="private">Private Chat</option>
+                        </select>
+                    </div>
+                    <div id="sellerSelect" class="mb-3" style="display: none;">
+                        <label class="form-label">Select Seller</label>
+                        <select class="form-select" id="sellerDropdown" onchange="selectSeller(this.value)">
+                            <option value="">Choose a seller...</option>
+                            @foreach (var seller in Model)
+                            {
+                                <option value="@seller.Id" data-username="@seller.Username">@seller.Username</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="chat-contacts">
+                        <div class="list-group">
+                            @foreach (var seller in Model)
+                            {
+                                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center seller-item"
+                                   onclick="selectUser('@seller.Id', '@seller.Username')">
+                                    <div class="chat-contact-avatar">
+                                        <i class="bi bi-person-circle"></i>
+                                    </div>
+                                    <div class="ms-2">
+                                        <div class="fw-bold">@seller.Username</div>
+                                        <small class="text-muted">Seller</small>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card chat-main">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-chat-dots"></i> Chat with <span id="selectedUser">Group</span></h5>
+                    <span class="badge bg-success" id="chatTypeIndicator">Group Chat</span>
+                </div>
+                <div class="card-body chat-box" style="height: 400px; overflow-y: auto;">
+                    <div id="messagesList" class="chat-messages"></div>
+                </div>
+                <div class="card-footer">
+                    <div class="input-group">
+                        <input type="text" id="messageInput" class="form-control" placeholder="Type your message...">
+                        <button class="btn btn-primary" onclick="sendMessage()">
+                            <i class="bi bi-send"></i> Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chat-sidebar {
+        border: none;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .chat-main {
+        border: none;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .chat-box {
+        background: #f8f9fa;
+        padding: 1rem;
+    }
+
+    .chat-messages {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .chat-messages .list-group-item {
+            margin: 5px 0;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+
+            .chat-messages .list-group-item.sent {
+                align-self: flex-end;
+                background: #007bff;
+                color: white;
+            }
+
+            .chat-messages .list-group-item.received {
+                align-self: flex-start;
+                background: white;
+            }
+
+    .seller-item {
+        transition: all 0.3s ease;
+        border: none;
+        margin-bottom: 5px;
+        border-radius: 10px;
+    }
+
+        .seller-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+    .chat-contact-avatar {
+        font-size: 1.5rem;
+        color: #6c757d;
+    }
+
+    .badge {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        let connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").withAutomaticReconnect().build();
+        let selectedUserId = null;
+        let chatType = "group";
+        let chatHistory = { group: [], private: {} }; // Initialize chat history
+
+        connection.on("ClearMessages", function() {
+            chatHistory = { group: [], private: {} };
+            document.getElementById("messagesList").innerHTML = "";
+        });
+
+        connection.on("ReceivePrivateMessage", function (user, message, senderId, isSent) {
+            if (chatType === "private" && (selectedUserId === senderId || isSent)) {
+                let msg = { user, message, isSent };
+                (chatHistory.private[senderId] || (chatHistory.private[senderId] = [])).push(msg);
+                displayMessages();
+            }
+        });
+
+        connection.on("ReceiveGroupMessage", function (user, message) {
+            if (chatType === "group") {
+                let msg = { user, message };
+                chatHistory.group.push(msg);
+                displayMessages();
+            }
+        });
+
+        connection.start()
+            .then(function() {
+                console.log("Connected to chat hub");
+                loadCurrentChatHistory();
+            })
+            .catch(function (err) {
+                return console.error(err.toString());
+            });
+
+        function displayMessages() {
+            const messagesList = document.getElementById("messagesList");
+            messagesList.innerHTML = "";
+
+            if (chatType === "private" && selectedUserId) {
+                const messages = chatHistory.private[selectedUserId] || [];
+                messages.forEach(msg => {
+                    let li = document.createElement("li");
+                    li.className = "list-group-item " + (msg.isSent ? "sent" : "received");
+                    li.textContent = `${msg.user}: ${msg.message}`;
+                    messagesList.appendChild(li);
+                });
+            } else if (chatType === "group") {
+                chatHistory.group.forEach(msg => {
+                    let li = document.createElement("li");
+                    li.className = "list-group-item " + (msg.user === "@User.Identity.Name" ? "sent" : "received");
+                    li.textContent = `${msg.user}: ${msg.message}`;
+                    messagesList.appendChild(li);
+                });
+            }
+            scrollToBottom();
+        }
+
+        function loadCurrentChatHistory() {
+            if (selectedUserId || chatType === "group") {
+                fetch(`/Admin/GetChatMessages?sellerId=${selectedUserId || ""}&chatType=${chatType}`)
+                    .then(response => response.json())
+                    .then(messages => {
+                        chatHistory = { group: [], private: {} };
+                        if (chatType === "private") {
+                            chatHistory.private[selectedUserId] = messages;
+                        } else {
+                            chatHistory.group = messages;
+                        }
+                        displayMessages();
+                    })
+                    .catch(err => console.error("Error loading chat history:", err));
+            }
+        }
+
+        function switchChatType() {
+            chatType = document.getElementById("chatType").value;
+            document.getElementById("sellerSelect").style.display = chatType === "private" ? "block" : "none";
+
+            if (chatType === "group") {
+                selectedUserId = null;
+                document.getElementById("selectedUser").textContent = "Group";
+                document.getElementById("chatTypeIndicator").textContent = "Group Chat";
+            }
+
+            document.getElementById("messagesList").innerHTML = "";
+            loadCurrentChatHistory();
+        }
+
+        function selectSeller(userId) {
+            if (!userId) return;
+            const username = document.querySelector(`option[value='${userId}']`).dataset.username;
+            selectUser(userId, username);
+        }
+
+        function selectUser(userId, username) {
+            selectedUserId = userId;
+            chatType = "private";
+            document.getElementById("selectedUser").textContent = username;
+            document.getElementById("chatType").value = "private";
+            document.getElementById("sellerSelect").style.display = "block";
+            document.getElementById("sellerDropdown").value = userId;
+            document.getElementById("chatTypeIndicator").textContent = "Private Chat with " + username;
+            loadCurrentChatHistory();
+        }
+
+        function sendMessage() {
+            let message = document.getElementById("messageInput").value;
+            if (!message.trim()) return;
+
+            if (chatType === "private" && selectedUserId) {
+                connection.invoke("SendMessage", selectedUserId, message);
+            } else {
+                connection.invoke("SendGroupMessage", message);
+            }
+            document.getElementById("messageInput").value = "";
+        }
+
+        function scrollToBottom() {
+            const chatBox = document.querySelector('.chat-box');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Enable Enter key to send message
+        document.getElementById("messageInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+}

@@ -1,0 +1,96 @@
+﻿@model IEnumerable<InventoryAssignment>
+
+<div class="container mt-4">
+    <h2>Product Sales Entry</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4>Your Inventory</h4>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Assigned Quantity</th>
+                            <th>Remaining Quantity</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            int soldQty = 0;
+                            int remaining = 0;
+                            try
+                            {
+                                soldQty = ViewBag.SoldQuantities?.ContainsKey(item.Id) == true
+                                ? ViewBag.SoldQuantities[item.Id]
+                                : 0;
+                                 remaining = Math.Max(0, item.AssignedQuantity - soldQty);
+
+                            }
+                            catch(Exception ex)
+                            {
+                                
+                            }
+                            
+
+                            <tr>
+                                <td>@item.Product.Name</td>
+                                <td>@item.AssignedQuantity</td>
+                                <td>@remaining</td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm"
+                                            onclick="openSaleModal(@item.Id,@item.ProductId, '@item.Product.Name', @remaining)"
+                                    @(remaining == 0 ? "disabled" : "")>
+                                        Add Sale
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Modal -->
+<div class="modal fade" id="saleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddSale" method="post">
+                <input type="hidden" id="inventoryAssignmentId" name="inventoryAssignmentId" />
+                <input type="hidden" id="productId" name="productId" />
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Sale - <span id="productName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Quantity (Max: <span id="maxQuantity"></span>)</label>
+                        <input type="number" name="quantity" class="form-control" required min="1" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Sale</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openSaleModal(inventoryAssignmentId, productId, productName, remaining) {
+            document.getElementById('inventoryAssignmentId').value = inventoryAssignmentId;
+            document.getElementById('productId').value = productId;
+            document.getElementById('productName').textContent = productName;
+            document.getElementById('maxQuantity').textContent = remaining;
+            var quantityInput = document.querySelector('input[name="quantity"]');
+            quantityInput.max = remaining;
+            new bootstrap.Modal(document.getElementById('saleModal')).show();
+        }
+    </script>
+}
